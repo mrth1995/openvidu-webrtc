@@ -1,0 +1,21 @@
+$color-ruby: #890050;
+$color-label: #777777;
+$color-steel: #B3ABC0;
+$color-border: #DCD5CF;
+
+html {
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.panel {
+  background: #f6f6f6;
+  width: 640px;
+  height: 480px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 8px;
+  box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.11);
+}

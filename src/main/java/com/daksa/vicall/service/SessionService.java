@@ -1,13 +1,12 @@
 package com.daksa.vicall.service;
 
-import com.daksa.vicall.model.SessionData;
+import com.daksa.vicall.model.JoinSession;
 import io.openvidu.java.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
-import javax.ws.rs.core.Response;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,8 +29,10 @@ public class SessionService implements Serializable {
 		openVidu = new OpenVidu(OPENVIDU_URL, SECRET);
 	}
 
-	public String join(String sessionName, String username) {
+	public String join(JoinSession joinSession) {
 		OpenViduRole role = OpenViduRole.PUBLISHER;
+		String sessionName = joinSession.getSessionName();
+		String username = joinSession.getName();
 		String serverData = "{\"serverData\": \"" + username + "\"}";
 		TokenOptions tokenOptions = new TokenOptions.Builder().data(serverData).role(role).build();
 
@@ -62,7 +63,7 @@ public class SessionService implements Serializable {
 			return token;
 
 		} catch (Exception e) {
-			// If error generate an error message and return it to client
+			LOG.error(e.getMessage(), e);
 			return null;
 		}
 	}
