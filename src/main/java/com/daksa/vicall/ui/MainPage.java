@@ -9,6 +9,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
@@ -29,14 +30,12 @@ public class MainPage extends Panel {
 	private SessionService sessionService;
 
 	private Binder<JoinSession> joinSessionBinder;
-	private VerticalLayout joinPanel;
-	private VerticalLayout roomPanel;
 	private String token;
 	private JoinSession joinSession;
 
 	@PostConstruct
 	public void init() {
-		joinPanel = createJoinPanel();
+		VerticalLayout joinPanel = createJoinPanel();
 		add(joinPanel);
 	}
 
@@ -63,7 +62,7 @@ public class MainPage extends Panel {
 	}
 
 	private VerticalLayout createCallPanel() {
-		VerticalLayout session = new VerticalLayout();
+		HorizontalLayout session = new HorizontalLayout();
 		session.setId("session");
 		Div sessionHeader = new Div();
 		sessionHeader.setId("session-header");
@@ -73,10 +72,6 @@ public class MainPage extends Panel {
 		session.add(sessionHeader);
 		Div mainVideo = new Div();
 		mainVideo.setId("main-video");
-		Paragraph nickName = new Paragraph();
-		nickName.setId("nickName");
-		Video video = new Video();
-		mainVideo.add(nickName, video);
 		session.add(mainVideo);
 		Div videoContainer = new Div();
 		videoContainer.setId("video-container");
@@ -85,14 +80,13 @@ public class MainPage extends Panel {
 		leave.addClickListener(buttonClickEvent -> {
 			leave();
 		});
-		session.add(leave);
-		return session;
+		VerticalLayout verticalLayout = new VerticalLayout(session, leave);
+		return verticalLayout;
 	}
 
 	private void join() {
-		joinPanel.setVisible(false);
-		roomPanel = createCallPanel();
-		add(roomPanel);
+		removeAll();
+		add(createCallPanel());
 		LOG.info("Joining session");
 		joinSession = new JoinSession();
 		joinSessionBinder.writeBeanIfValid(joinSession);
@@ -107,8 +101,10 @@ public class MainPage extends Panel {
 	}
 
 	private void leave() {
-		roomPanel.setVisible(false);
-		joinPanel.setVisible(true);
+		removeAll();
+		add(createJoinPanel());
+		LOG.info("leaving session token: {} {}", token, joinSession.getSessionName());
 		sessionService.leave(token, joinSession.getSessionName());
+		getElement().executeJs("leaveSession()");
 	}
 }

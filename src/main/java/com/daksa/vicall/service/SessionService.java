@@ -1,6 +1,7 @@
 package com.daksa.vicall.service;
 
 import com.daksa.vicall.model.JoinSession;
+import com.vaadin.cdi.annotation.VaadinSessionScoped;
 import io.openvidu.java.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +56,11 @@ public class SessionService implements Serializable {
 		LOG.info("New session {}", sessionName);
 		try {
 			// Create a new OpenVidu Session
-			Session session = openVidu.createSession();
+			SessionProperties sessionProperties = new SessionProperties.Builder()
+					.recordingMode(RecordingMode.ALWAYS)
+					.defaultOutputMode(Recording.OutputMode.COMPOSED)
+					.build();
+			Session session = openVidu.createSession(sessionProperties);
 			String token = session.generateToken(tokenOptions);
 			mapSessions.put(sessionName, session);
 			mapSessionNamesTokens.put(sessionName, new ConcurrentHashMap<>());

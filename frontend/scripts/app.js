@@ -66,9 +66,18 @@ window.appendUserData = function (videoElement, connection) {
 };
 
 window.leaveSession = function () {
+    console.log('disconnecting session');
     roomSession.disconnect();
     roomSession = null;
+    console.log(roomSession);
     cleanSessionView();
+};
+
+window.onbeforeunload = () => {
+    if (roomSession) {
+        console.log('before unload');
+        leaveSession();
+    }
 };
 
 window.removeUserData = function (connection) {
