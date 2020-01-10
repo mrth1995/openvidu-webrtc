@@ -66,7 +66,8 @@ public class SessionService implements Serializable {
 		try {
 			// Create a new OpenVidu Session
 			SessionProperties sessionProperties = new SessionProperties.Builder()
-					.recordingMode(RecordingMode.MANUAL)
+					.customSessionId(sessionName)
+					.recordingMode(RecordingMode.ALWAYS)
 					.defaultRecordingLayout(RecordingLayout.BEST_FIT)
 					.defaultOutputMode(Recording.OutputMode.COMPOSED)
 					.build();
@@ -81,27 +82,6 @@ public class SessionService implements Serializable {
 		} catch (Exception e) {
 			LOG.error(e.getMessage(), e);
 			return null;
-		}
-	}
-
-	public void startRecord(String sessionId, String sessionName) throws OpenViduJavaClientException, OpenViduHttpException {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd:HH:mm:ss");
-		String recordingName = "record:" + sdf.format(new Date());
-		LOG.info("record for session {}", sessionId);
-		LOG.info("start recording {}", recordingName);
-		Session session = mapSessions.get(sessionName);
-		session.fetch();
-		List<Connection> connections = session.getActiveConnections();
-		if (connections != null && !connections.isEmpty()) {
-			RecordingProperties properties = new RecordingProperties.Builder()
-					.name(recordingName)
-					.hasVideo(true)
-					.hasAudio(true)
-					.recordingLayout(RecordingLayout.BEST_FIT)
-					.outputMode(Recording.OutputMode.COMPOSED)
-					.build();
-			Recording recording = openVidu.startRecording(sessionId, properties);
-			mapRecording.put(sessionName, recording);
 		}
 	}
 

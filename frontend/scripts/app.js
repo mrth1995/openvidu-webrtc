@@ -1,6 +1,7 @@
 window.openVidu = null;
 window.sessionName = null;
 window.roomSession = null;
+window.publisher = null;
 
 window.joinSession = function (sessionData) {
     let data = JSON.parse(sessionData);
@@ -26,7 +27,7 @@ window.joinSession = function (sessionData) {
     console.log('token ' + token)
     roomSession.connect(token, {clientData: nickname})
         .then(() => {
-            let publisher = openVidu.initPublisher('main-video', {
+            publisher = openVidu.initPublisher('video-container', {
                 audioSource: undefined,
                 videoSource: undefined,
                 publishAudio: true,
@@ -68,7 +69,6 @@ window.appendUserData = function (videoElement, connection) {
 window.leaveSession = function () {
     console.log('disconnecting session');
     roomSession.disconnect();
-    roomSession = null;
     console.log(roomSession);
     cleanSessionView();
 };

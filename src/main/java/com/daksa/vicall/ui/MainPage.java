@@ -8,8 +8,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.vaadin.cdi.annotation.RouteScoped;
 import com.vaadin.flow.router.Route;
 import io.olivia.webutil.json.Json;
-import io.openvidu.java.client.OpenViduHttpException;
-import io.openvidu.java.client.OpenViduJavaClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,22 +47,17 @@ public class MainPage extends Panel {
 			getElement().executeJs("joinSession($0)", dataString);
 			LOG.info("Data string {}", dataString);
 			LOG.info("Join session response {}", Json.getWriter().withDefaultPrettyPrinter().writeValueAsString(joinSessionResponse));
-			sessionService.startRecord(joinSessionResponse.getSessionId(), joinSession.getSessionName());
-		} catch (JsonProcessingException | OpenViduJavaClientException | OpenViduHttpException e) {
+		} catch (JsonProcessingException e) {
 			LOG.error(e.getMessage(), e);
 		}
 	}
 
 	private void leave() {
-		try {
-			sessionService.leave(joinSessionResponse.getToken(), joinSession.getSessionName());
-			getElement().executeJs("leaveSession()");
-			removeAll();
-			joinPanel = new JoinPanel(e -> join());
-			add(joinPanel);
-			LOG.info("leaving session token: {} {}", joinSessionResponse.getToken(), joinSession.getSessionName());
-		} catch (OpenViduJavaClientException | OpenViduHttpException e) {
-			LOG.error(e.getMessage(), e);
-		}
+		sessionService.leave(joinSessionResponse.getToken(), joinSession.getSessionName());
+		getElement().executeJs("leaveSession()");
+		removeAll();
+		joinPanel = new JoinPanel(e -> join());
+		add(joinPanel);
+		LOG.info("leaving session token: {} {}", joinSessionResponse.getToken(), joinSession.getSessionName());
 	}
 }
