@@ -1,14 +1,20 @@
 package com.daksa.vicall.service;
 
 import com.daksa.vicall.model.JoinSession;
+import com.daksa.vicall.model.JoinSessionResponse;
 import com.vaadin.cdi.annotation.VaadinSessionScoped;
+import io.olivia.webutil.json.Json;
 import io.openvidu.java.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
+import java.io.IOException;
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,6 +26,7 @@ public class SessionService implements Serializable {
 	private OpenVidu openVidu;
 
 	private Map<String, Session> mapSessions = new ConcurrentHashMap<>();
+	private Map<String, Recording> mapRecording = new ConcurrentHashMap<>();
 	private Map<String, Map<String, OpenViduRole>> mapSessionNamesTokens = new ConcurrentHashMap<>();
 
 	private final String OPENVIDU_URL = "https://openvidu.daksa.co.id:4443";
@@ -30,7 +37,7 @@ public class SessionService implements Serializable {
 		openVidu = new OpenVidu(OPENVIDU_URL, SECRET);
 	}
 
-	public String join(JoinSession joinSession) {
+	public JoinSessionResponse join(JoinSession joinSession) {
 		OpenViduRole role = OpenViduRole.PUBLISHER;
 		String sessionName = joinSession.getSessionName();
 		String username = joinSession.getName();
@@ -40,9 +47,11 @@ public class SessionService implements Serializable {
 		if (mapSessions.get(sessionName) != null) {
 			LOG.info("Existing session {}", sessionName);
 			try {
-				String token = mapSessions.get(sessionName).generateToken(tokenOptions);
+				Session session = mapSessions.get(sessionName);
+				LOG.info("session ID {}", session.getSessionId());
+				String token = session.generateToken(tokenOptions);
 				this.mapSessionNamesTokens.get(sessionName).put(token, role);
-				return token;
+				return new JoinSessionResponse(token, session.getSessionId());
 			} catch (OpenViduJavaClientException e1) {
 				LOG.error(e1.getMessage(), e1);
 				return null;
@@ -57,19 +66,42 @@ public class SessionService implements Serializable {
 		try {
 			// Create a new OpenVidu Session
 			SessionProperties sessionProperties = new SessionProperties.Builder()
-					.recordingMode(RecordingMode.ALWAYS)
+					.recordingMode(RecordingMode.MANUAL)
+					.defaultRecordingLayout(RecordingLayout.BEST_FIT)
 					.defaultOutputMode(Recording.OutputMode.COMPOSED)
 					.build();
 			Session session = openVidu.createSession(sessionProperties);
+			LOG.info("session ID {}", session.getSessionId());
 			String token = session.generateToken(tokenOptions);
 			mapSessions.put(sessionName, session);
 			mapSessionNamesTokens.put(sessionName, new ConcurrentHashMap<>());
 			mapSessionNamesTokens.get(sessionName).put(token, role);
-			return token;
+			return new JoinSessionResponse(token, session.getSessionId());
 
 		} catch (Exception e) {
 			LOG.error(e.getMessage(), e);
 			return null;
+		}
+	}
+
+	public void startRecord(String sessionId, String sessionName) throws OpenViduJavaClientException, OpenViduHttpException {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd:HH:mm:ss");
+		String recordingName = "record:" + sdf.format(new Date());
+		LOG.info("record for session {}", sessionId);
+		LOG.info("start recording {}", recordingName);
+		Session session = mapSessions.get(sessionName);
+		session.fetch();
+		List<Connection> connections = session.getActiveConnections();
+		if (connections != null && !connections.isEmpty()) {
+			RecordingProperties properties = new RecordingProperties.Builder()
+					.name(recordingName)
+					.hasVideo(true)
+					.hasAudio(true)
+					.recordingLayout(RecordingLayout.BEST_FIT)
+					.outputMode(Recording.OutputMode.COMPOSED)
+					.build();
+			Recording recording = openVidu.startRecording(sessionId, properties);
+			mapRecording.put(sessionName, recording);
 		}
 	}
 
@@ -78,6 +110,8 @@ public class SessionService implements Serializable {
 			if (this.mapSessionNamesTokens.get(sessionName).remove(token) != null) {
 				if (this.mapSessionNamesTokens.get(sessionName).isEmpty()) {
 					this.mapSessions.remove(sessionName);
+					LOG.info("Total participant {}", mapSessions.size());
+
 				}
 			}
 		}

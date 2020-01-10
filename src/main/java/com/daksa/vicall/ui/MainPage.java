@@ -1,20 +1,15 @@
 package com.daksa.vicall.ui;
 
 import com.daksa.vicall.model.JoinSession;
+import com.daksa.vicall.model.JoinSessionResponse;
 import com.daksa.vicall.model.SessionData;
 import com.daksa.vicall.service.SessionService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.vaadin.cdi.annotation.RouteScoped;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.html.Paragraph;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
 import io.olivia.webutil.json.Json;
+import io.openvidu.java.client.OpenViduHttpException;
+import io.openvidu.java.client.OpenViduJavaClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,82 +24,47 @@ public class MainPage extends Panel {
 	@Inject
 	private SessionService sessionService;
 
-	private Binder<JoinSession> joinSessionBinder;
-	private String token;
+	private JoinSessionResponse joinSessionResponse;
 	private JoinSession joinSession;
+	private JoinPanel joinPanel;
+	private CallPanel callPanel;
 
 	@PostConstruct
 	public void init() {
-		VerticalLayout joinPanel = createJoinPanel();
+		joinPanel = new JoinPanel(e -> join());
 		add(joinPanel);
-	}
-
-	private VerticalLayout createJoinPanel() {
-		VerticalLayout div = new VerticalLayout();
-		div.setId("join-panel");
-		joinSessionBinder = new Binder<>();
-		TextField name = new TextField();
-		name.setId("name");
-		TextField sessionName = new TextField();
-		sessionName.setId("session-name");
-		joinSessionBinder.forField(sessionName)
-				.asRequired()
-				.bind(JoinSession::getSessionName, JoinSession::setSessionName);
-		joinSessionBinder.forField(name)
-				.asRequired()
-				.bind(JoinSession::getName, JoinSession::setName);
-		Button join = new Button("Join");
-		join.addClickListener(buttonClickEvent -> {
-			join();
-		});
-		div.add(name, sessionName, join);
-		return div;
-	}
-
-	private VerticalLayout createCallPanel() {
-		HorizontalLayout session = new HorizontalLayout();
-		session.setId("session");
-		Div sessionHeader = new Div();
-		sessionHeader.setId("session-header");
-		H3 sessionTitle = new H3();
-		sessionTitle.setId("session-title");
-		sessionHeader.add(sessionTitle);
-		session.add(sessionHeader);
-		Div mainVideo = new Div();
-		mainVideo.setId("main-video");
-		session.add(mainVideo);
-		Div videoContainer = new Div();
-		videoContainer.setId("video-container");
-		session.add(videoContainer);
-		Button leave = new Button("Leave");
-		leave.addClickListener(buttonClickEvent -> {
-			leave();
-		});
-		VerticalLayout verticalLayout = new VerticalLayout(session, leave);
-		return verticalLayout;
 	}
 
 	private void join() {
 		removeAll();
-		add(createCallPanel());
+		callPanel = new CallPanel(e -> leave());
+		add(callPanel);
 		LOG.info("Joining session");
 		joinSession = new JoinSession();
-		joinSessionBinder.writeBeanIfValid(joinSession);
-		token = sessionService.join(joinSession);
-		SessionData data = new SessionData(token, joinSession.getSessionName(), joinSession.getName());
+		joinPanel.getJoinSessionBinder().writeBeanIfValid(joinSession);
+		joinSessionResponse = sessionService.join(joinSession);
+		SessionData data = new SessionData(joinSessionResponse.getToken(), joinSession.getSessionName(), joinSession.getName());
 		try {
 			String dataString = Json.getWriter().writeValueAsString(data);
 			getElement().executeJs("joinSession($0)", dataString);
-		} catch (JsonProcessingException e) {
+			LOG.info("Data string {}", dataString);
+			LOG.info("Join session response {}", Json.getWriter().withDefaultPrettyPrinter().writeValueAsString(joinSessionResponse));
+			sessionService.startRecord(joinSessionResponse.getSessionId(), joinSession.getSessionName());
+		} catch (JsonProcessingException | OpenViduJavaClientException | OpenViduHttpException e) {
 			LOG.error(e.getMessage(), e);
 		}
 	}
 
 	private void leave() {
-		removeAll();
-		add(createJoinPanel());
-		LOG.info("leaving session token: {} {}", token, joinSession.getSessionName());
-		sessionService.leave(token, joinSession.getSessionName());
-		getElement().executeJs("leaveSession()");
+		try {
+			sessionService.leave(joinSessionResponse.getToken(), joinSession.getSessionName());
+			getElement().executeJs("leaveSession()");
+			removeAll();
+			joinPanel = new JoinPanel(e -> join());
+			add(joinPanel);
+			LOG.info("leaving session token: {} {}", joinSessionResponse.getToken(), joinSession.getSessionName());
+		} catch (OpenViduJavaClientException | OpenViduHttpException e) {
+			LOG.error(e.getMessage(), e);
+		}
 	}
 }
