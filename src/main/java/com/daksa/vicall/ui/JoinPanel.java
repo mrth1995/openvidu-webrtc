@@ -23,10 +23,10 @@ public class JoinPanel extends VerticalLayout {
 		sessionName.setLabel("Session Name");
 		sessionName.setId("session-name");
 		joinSessionBinder.forField(sessionName)
-				.asRequired()
+				.asRequired("Session name cannot be empty")
 				.bind(JoinSession::getSessionName, JoinSession::setSessionName);
 		joinSessionBinder.forField(name)
-				.asRequired()
+				.asRequired("Name cannot be empty")
 				.bind(JoinSession::getName, JoinSession::setName);
 		Button join = new Button("Join");
 		join.addClickListener(eventListener);
