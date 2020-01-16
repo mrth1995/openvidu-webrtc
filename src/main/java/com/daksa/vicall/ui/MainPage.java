@@ -34,21 +34,24 @@ public class MainPage extends Panel {
 	}
 
 	private void join() {
-		removeAll();
-		callPanel = new CallPanel(e -> leave());
-		add(callPanel);
-		LOG.info("Joining session");
 		joinSession = new JoinSession();
-		joinPanel.getJoinSessionBinder().writeBeanIfValid(joinSession);
-		joinSessionResponse = sessionService.join(joinSession);
-		SessionData data = new SessionData(joinSessionResponse.getToken(), joinSession.getSessionName(), joinSession.getName());
-		try {
-			String dataString = Json.getWriter().writeValueAsString(data);
-			getElement().executeJs("joinSession($0)", dataString);
-			LOG.info("Data string {}", dataString);
-			LOG.info("Join session response {}", Json.getWriter().withDefaultPrettyPrinter().writeValueAsString(joinSessionResponse));
-		} catch (JsonProcessingException e) {
-			LOG.error(e.getMessage(), e);
+		if (joinPanel.getJoinSessionBinder().writeBeanIfValid(joinSession)) {
+			removeAll();
+			callPanel = new CallPanel(e -> leave());
+			add(callPanel);
+			LOG.info("Joining session");
+			joinSessionResponse = sessionService.join(joinSession);
+			SessionData data = new SessionData(joinSessionResponse.getToken(), joinSession.getSessionName(), joinSession.getName());
+			try {
+				String dataString = Json.getWriter().writeValueAsString(data);
+				getElement().executeJs("joinSession($0)", dataString);
+				LOG.info("Data string {}", dataString);
+				LOG.info("Join session response {}", Json.getWriter().withDefaultPrettyPrinter().writeValueAsString(joinSessionResponse));
+			} catch (JsonProcessingException e) {
+				LOG.error(e.getMessage(), e);
+			}
+		} else {
+			NotificationFactory.info("Mandatory field empty").open();
 		}
 	}
 

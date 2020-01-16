@@ -17,8 +17,10 @@ public class JoinPanel extends VerticalLayout {
 		div.setId("join-panel");
 		joinSessionBinder = new Binder<>();
 		TextField name = new TextField();
+		name.setLabel("Name");
 		name.setId("name");
 		TextField sessionName = new TextField();
+		sessionName.setLabel("Session Name");
 		sessionName.setId("session-name");
 		joinSessionBinder.forField(sessionName)
 				.asRequired()
