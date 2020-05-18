@@ -1,0 +1,16 @@
+:host {
+  --vaadin-form-item-label-width: 150px;
+}
+[part="label"] {
+  font-size: var(--lumo-font-size-m);
+}
+::slotted(vaadin-text-field),
+::slotted(vaadin-combo-box),
+::slotted(vaadin-text-area),
+::slotted(vaadin-date-picker),
+::slotted(vaadin-integer-field),
+::slotted(vaadin-big-decimal-field),
+::slotted(vaadin-password-field),
+::slotted(vaadin-grid){
+  width: 100%;
+}

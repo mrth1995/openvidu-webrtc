@@ -1,0 +1,92 @@
+html {
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.container > .content-panel {
+  width: 100%;
+  min-width: 400px;
+  position: relative;
+}
+.container > .content-panel .view-container {
+  padding: var(--lumo-space-l);
+  padding-left: var(--lumo-space-xl);
+  overflow: auto;
+  height: calc(100% - 52px);
+  box-sizing: border-box;
+  position: relative;
+}
+.container > .content-panel .view-container .view-frame {
+  margin: 0 auto;
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.panel {
+  border: 1px solid var(--lumo-contrast-20pct);
+  border-radius: var(--lumo-border-radius-m);
+  margin-bottom: var(--lumo-space-m);
+  width: 100%;
+}
+.panel.panel-xs {
+  width: calc(400%/12);
+}
+.panel.panel-s {
+  width: calc(200%/12);
+}
+.panel.panel-m {
+  width: calc(800%/12);
+}
+.panel.panel-l {
+  width: calc(1000%/12);
+}
+.panel.panel-xl {
+  width: calc(1100%/12);
+}
+.panel.panel-full {
+  width: calc(1200%/12);
+}
+.panel .panel-header {
+  padding: var(--lumo-space-m);
+  font-weight: bold;
+  border-bottom: 1px solid var(--lumo-contrast-20pct);
+}
+.panel .panel-body {
+  padding: var(--lumo-space-m);
+}
+.panel .panel-body vaadin-form-layout {
+  margin: 0;
+}
+.panel .panel-body .form-value {
+  width: 100%;
+  background: var(--lumo-contrast-5pct);
+  padding: var(--lumo-space-s);
+  border-radius: var(--lumo-border-radius-m);
+  min-height: 36px;
+}
+.panel .panel-body .subtitle {
+  display: block;
+  margin: 12px 0;
+}
+.panel .panel-body .subtitle h2 {
+  font-size: 1.5rem;
+}
+.panel .panel-footer {
+  padding: var(--lumo-space-m);
+  background: var(--lumo-contrast-5pct);
+}
+.panel.tab-panel vaadin-tabs {
+  margin-bottom: var(--lumo-space-m);
+}
+.panel.tab-panel .panel {
+  border: 0;
+}
+
+video {
+  width: 250px;
+  height: 250px;
+}
+
+/*# sourceMappingURL=style.css.map */
